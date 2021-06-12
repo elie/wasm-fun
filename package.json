@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "asbuild:untouched": "asc assembly/index.ts --target debug --exportRuntime",
+    "asbuild:optimized": "asc assembly/index.ts --target release --exportRuntime",
+    "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
+    "test": "node tests",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "@assemblyscript/loader": "^0.18.32",
+    "body-parser": "^1.19.0",
+    "debug": "^2.6.9",
+    "express": "^4.17.1",
+    "finalhandler": "^1.1.2"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.18.32"
+  }
+}

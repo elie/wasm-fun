@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <label for="divisors">Add a number!</label>
+  <input id="divisors"/>
+  <script src="https://cdn.jsdelivr.net/npm/@assemblyscript/loader/umd/index.js"></script>
+
+  <script src=/js/loader.js></script>
+  <script>
+    const el = document.getElementById("divisors");
+
+
+    function getDivisors(num) {
+      
+      let divisors = [];
+    
+      // get all small divisors
+      // (those less than or equal to the square root)
+      let end = Math.floor(Math.sqrt(num));
+      for (let int = 1; int <= end; int++) {
+        if (num % int === 0) {
+          divisors.push(int);
+        }
+      }
+    
+      // divisors always come in pairs,
+      // so we can use the small ones to get the large ones.
+      for (let i = divisors.length - 1; i >= 0; i--) {
+        let int = divisors[i];
+        // if the number is a perfect square,
+        // don't count the square root twice.
+        if (int * int === num) continue;
+        divisors.push(num / int);
+      }
+    
+      return divisors;
+    }
+    
+  
+
+      loadWasm('/build/optimized.wasm')
+      .then(instance => {
+        const { getDivisorsWasm, __getArray  } = instance;
+        el.addEventListener('keyup', () => {
+          console.table(run(el.value))
+        })
+        function run(n) {
+        const results = [];
+        let res;
+        let jsRes;
+          for (let i = 0; i < 100; i++) {
+          const timeStartWasm = performance.now();
+          res = __getArray(getDivisorsWasm(n))
+          const wasmTime = performance.now() - timeStartWasm;
+
+
+          const timeStartJS = performance.now();
+          jsRes = getDivisors(n);
+          const jsTime = performance.now() - timeStartJS;
+          
+          // serialize bigint
+          const json = (data) => JSON.stringify(data, (key, value) =>
+            typeof value === "bigint" ? `BIGINT::${value}` : value
+          );
+
+          console.log("jsRes", jsRes)
+          console.log("wasmRes", res.map(Number))
+          console.log("same?", JSON.stringify(jsRes) === json(res.map(Number)))
+          if (jsTime < wasmTime) {
+            results.push('JavaScript');
+          } else {
+            results.push('WASM');
+          }
+        }
+
+        return results.reduce((acc, item) => {
+            if (item === 'JavaScript') {
+                acc['JavaScript']++
+            }
+            if (item === 'WASM') {
+                acc['WASM']++
+            }
+            return acc;
+        }, {'JavaScript': 0, 'WASM': 0})
+
+    }
+
+      });
+  </script>
+</body>
+</html>
